@@ -1,12 +1,16 @@
+#!/usr/bin/env python3
+
 import json
-from datetime import datetime, date
+from datetime import datetime
 
 SNIPPETS_FILENAME = 'snippet-data.json'
+
 
 def convert_datetime(date_str):
     if date_str:
         return datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
     return None
+
 
 def convert_date(date_str):
     if date_str:
@@ -28,24 +32,28 @@ DATE_FIELDS = {
     'load_date': convert_date,
 }
 
-def convert_dates(item):
+
+def parse_dates(item):
     if isinstance(item, dict):
         for field in [f for f in DATE_FIELDS if f in item]:
             convert_func = DATE_FIELDS[field]
             item[field] = convert_func(item[field])
-        [convert_dates(item[key]) for key in item]
+        [parse_dates(item[key]) for key in item]
     elif isinstance(item, list):
-        [convert_dates(val) for val in item]
+        [parse_dates(val) for val in item]
+
 
 def parse_date_hook(dct):
-    convert_dates(dct)
+    parse_dates(dct)
     return dct
+
 
 def load_snippets():
     with open(SNIPPETS_FILENAME) as infile:
         raw_data = json.load(infile)
-        convert_dates(raw_data)
+        parse_dates(raw_data)
         return raw_data['data']
+
 
 def show_hierarchy(sample, pad='.'):
     if isinstance(sample, dict):
@@ -57,6 +65,7 @@ def show_hierarchy(sample, pad='.'):
             show_hierarchy(sample[0], pad)
         except IndexError:
             pass
+
 
 def groupby_created(data):
     results = dict()
