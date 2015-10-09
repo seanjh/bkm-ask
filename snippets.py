@@ -3,7 +3,12 @@
 import json
 from datetime import datetime
 
-SNIPPETS_FILENAME = 'snippet-data.json'
+SNIPPETS_FILENAME = 'secret_snippet_data.json'
+
+# TODO:
+# * messages/snippet
+# * number of objects
+# * messages/object
 
 
 def convert_datetime(date_str):
@@ -73,3 +78,27 @@ def groupby_created(data):
         date = item.get('created_at').date()
         results[date] = results.setdefault(date, 0) + 1
     return results
+
+
+def groupby_artist(data):
+    results = dict()
+    for item in data:
+        if type(item.get('ocobjects')) == type([]):
+            for art in item.get('ocobjects'):
+                for artist in art.get('artists'):
+                    artist_works = results.setdefault(artist["name"], dict())
+                    artist_work = artist_works.get(art.get("title"))
+                    if artist_work:
+                        artist_work["mentions"] = artist_work["mentions"] + 1
+                    else:
+                        artist_work = dict()
+                        artist_work["begin"] = art.get('object_date_begin')
+                        artist_work["end"] = art.get('object_date_end')
+                        artist_work["mentions"] = 1
+                        artist_works[art["title"]] = artist_work
+
+    return results
+
+
+def groupby_art_year(data):
+    pass
