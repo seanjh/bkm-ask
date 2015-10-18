@@ -1,8 +1,9 @@
+#!/usr/bin/env python
+
 import json
 import pprint
 import requests
 import snippets
-
 from six.moves.urllib.parse import quote
 from secrets import ARTSY, NY_TIMES
 
@@ -21,7 +22,6 @@ def artsy_search_artist(artist_name):
     ))
     res = session.send(artsy_request(requests.Request("GET", search_url)))
     return res.json()
-
 
 
 def mentions_cmp_func(mentions, other):

@@ -1,14 +1,10 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import json
+import six
 from datetime import datetime
 
 SNIPPETS_FILENAME = 'secret_snippet_data.json'
-
-# TODO:
-# * messages/snippet
-# * number of objects
-# * messages/object
 
 
 def convert_datetime(date_str):
@@ -38,6 +34,17 @@ DATE_FIELDS = {
 }
 
 
+def get_snippet_artworks(snippet):
+    if isinstance(snippet.get('ocobjects'), list):
+        return [work for work in snippet.get('ocobjects')]
+    return []
+
+
+def get_snippet_artist(snippet):
+    return [artist for work in get_snippet_artworks(snippet)
+            for artist in work.get('artists')]
+
+
 def parse_dates(item):
     if isinstance(item, dict):
         for field in [f for f in DATE_FIELDS if f in item]:
@@ -60,14 +67,15 @@ def load_snippets():
         return raw_data['data']
 
 
-def show_hierarchy(sample, pad='.'):
+def show_hierarchy(sample, pad=''):
     if isinstance(sample, dict):
         for key in sample.keys():
-            print('%s%s' % (pad, key))
+            six.print_('%s%s' % (pad, key))
             show_hierarchy(sample[key], pad + '.')
     elif isinstance(sample, list):
+        six.print_('%sLIST (len=%d)' % (pad, len(sample)))
         try:
-            show_hierarchy(sample[0], pad)
+            show_hierarchy(sample[0], pad + '.')
         except IndexError:
             pass
 
@@ -83,7 +91,7 @@ def groupby_created(data):
 def groupby_artist(data):
     results = dict()
     for item in data:
-        if type(item.get('ocobjects')) == type([]):
+        if isinstance(item.get('ocobjects'), list):
             for art in item.get('ocobjects'):
                 for artist in art.get('artists'):
                     artist_works = results.setdefault(artist["name"], dict())
