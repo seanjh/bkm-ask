@@ -61,8 +61,10 @@ def main():
     dump_results("secret_artist_groups.json", artist_grouping)
     dump_results("secret_mentions.json", works_mentioned_sorted(artist_grouping))
 
-    results = artsy_search_artist(artist_grouping.keys()[0])
-    pp.pprint(results)
+    results = artsy_search_artist('Judy Chicago')
+    with open('secret_artsy_search.json', 'w') as outfile:
+        outfile.write(json.dumps(results, sort_keys=True, indent=4))
+    # pp.pprint(results)
 
 if __name__ == '__main__':
     main()

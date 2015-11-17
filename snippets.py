@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 
 import json
+import string
 import six
+import language
+import calendar
 from datetime import datetime
 
 SNIPPETS_FILENAME = 'secret_snippet_data.json'
@@ -80,6 +83,35 @@ def show_hierarchy(sample, pad=''):
             pass
 
 
+def fetch_artwork_artists(artwork):
+    return artwork.get('artists')
+
+
+def initialize_artwork_entry(artwork):
+    return {
+        "artist": list(fetch_artwork_artists(artwork)),
+        "questions": list(),
+        "artwork": dict(artwork)
+    }
+
+
+def groupby_ocobjects_id(data):
+    results = dict()
+    for snip in data:
+        if isinstance(snip.get('ocobjects'), list):
+            for artwork in snip.get('ocobjects'):
+                artwork_id = artwork.get('id')
+                if not results.get(artwork_id):
+                    results[artwork_id] = initialize_artwork_entry(artwork)
+                artwork_questions = results[artwork_id]["questions"]
+                artwork_questions += [
+                    q for q in language.extract_snippet_questions_iter(snip)
+                ]
+                # for question in extract_snippet_questions_iter(snip):
+                # artwork_questions.append(question)
+    return results
+
+
 def groupby_created(data):
     results = dict()
     for item in data:
@@ -110,3 +142,34 @@ def groupby_artist(data):
 
 def groupby_art_year(data):
     pass
+
+
+def default_serializer(obj):
+    """Default JSON serializer."""
+
+    if isinstance(obj, datetime):
+        if obj.utcoffset() is not None:
+            obj = obj - obj.utcoffset()
+        millis = int(
+            calendar.timegm(obj.timetuple()) * 1000 +
+            obj.microsecond / 1000
+        )
+        return millis
+    raise TypeError('Not sure how to serialize %s' % (obj,))
+
+
+def make_objectid_file():
+    data = load_snippets()
+    results = groupby_ocobjects_id(data)
+    # print(results.keys())
+    # print(json.dumps(
+    #     results.get(4002), sort_keys=True, indent=4, default=default_serializer
+    # ))
+    with open('secret_id_objects.json', 'w') as outfile:
+        json.dump(
+            results,
+            outfile,
+            sort_keys=True,
+            indent=4,
+            default=default_serializer
+        )

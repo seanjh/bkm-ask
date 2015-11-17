@@ -11,6 +11,20 @@ CUTOFF = 5
 EDITED_PATTERN = re.compile(r"(\s)*(DRAFT[\s-]{0,3})*(.+)(\s)*")
 
 
+def is_visitor_message(message):
+    return message.get('host_user_id') is None
+
+
+def extract_snippet_questions_iter(snippet):
+    chat_messages = snippet.get("chat_messages")
+    for chat_id, text in chat_messages.iteritems():
+        if is_visitor_message(text):
+            if text.get("edited_text"):
+                yield EDITED_PATTERN.match(text["edited_text"]).group(3)
+            else:
+                yield string.strip(text["message"])
+
+
 def extract_snippet_messages_iter(snippet):
     chat_messages = snippet.get("chat_messages")
     for chat_id, text in chat_messages.iteritems():
